@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Учет инструмента{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { padding-top: 60px; background-color: #f5f5f5; }
+        .navbar-brand { font-weight: bold; }
+        .card { margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .status-ok { color: #28a745; }
+        .status-repair { color: #ffc107; }
+        .status-decommissioned { color: #dc3545; }
+        .badge-issued { background-color: #007bff; }
+        .badge-returned { background-color: #28a745; }
+        .badge-overdue { background-color: #dc3545; }
+        .flash-messages { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="bi bi-tools"></i> Склад инструментов
+            </a>
+            {% if session.user_id %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard"><i class="bi bi-speedometer2"></i> Панель</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/issue"><i class="bi bi-box-arrow-right"></i> Выдача</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/return_tool"><i class="bi bi-box-arrow-in-left"></i> Возврат</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/repairs"><i class="bi bi-wrench"></i> Ремонт</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/journal"><i class="bi bi-journal-text"></i> Журнал</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/reports"><i class="bi bi-file-earmark-bar-graph"></i> Отчеты</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-gear"></i> Справочники
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/tools_directory">Инструменты</a></li>
+                            <li><a class="dropdown-item" href="/employees_directory">Сотрудники</a></li>
+                            {% if session.role == 'admin' %}
+                            <li><a class="dropdown-item" href="/users_directory">Пользователи</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/settings">Настройки</a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                </ul>
+                <span class="navbar-text me-3">
+                    <i class="bi bi-person"></i> {{ session.username }}
+                    {% if session.role == 'admin' %}
+                    <span class="badge bg-warning text-dark">Админ</span>
+                    {% endif %}
+                </span>
+                <a href="/logout" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> Выйти
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    {% block content %}{% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
