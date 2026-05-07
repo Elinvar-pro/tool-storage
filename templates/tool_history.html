@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}История инструмента{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4"><i class="bi bi-clock-history"></i> История инструмента</h2>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row">
+                <div class="col-md-8">
+                    <select class="form-select" name="tool_id" onchange="window.location.href=this.value">
+                        {% for tool in tools %}
+                        <option value="{{ url_for('report_tool_history', tool_id=tool.id) }}"
+                                {% if tool.id == selected_tool %}selected{% endif %}>
+                            {{ tool.name }} ({{ tool.inventory_number }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Тип операции</th>
+                            <th>Сотрудник / Детали</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in history %}
+                        <tr>
+                            <td>{{ event.date }}</td>
+                            <td>
+                                {% if event.type == 'issue' %}
+                                <i class="bi bi-box-arrow-right text-primary"></i> Выдача
+                                {% elif event.type == 'return' %}
+                                <i class="bi bi-box-arrow-in-left text-success"></i> Возврат
+                                {% elif event.type == 'repair_send' %}
+                                <i class="bi bi-wrench text-warning"></i> Отправка в ремонт
+                                {% elif event.type == 'repair_return' %}
+                                <i class="bi bi-tools text-info"></i> Возврат из ремонта
+                                {% endif %}
+                            </td>
+                            <td>{{ event.details }}</td>
+                            <td>
+                                {% if event.type == 'issue' %}
+                                <span class="badge bg-primary">На руках</span>
+                                {% elif event.type == 'return' %}
+                                <span class="badge bg-success">Возвращён</span>
+                                {% elif event.type == 'repair_send' %}
+                                <span class="badge bg-warning text-dark">В ремонте</span>
+                                {% elif event.type == 'repair_return' %}
+                                <span class="badge bg-info">Исправен</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-muted text-center">
+                                Нет операций с этим инструментом
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
