@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Справочник сотрудников{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4"><i class="bi bi-people"></i> Справочник сотрудников</h2>
+
+    {% if session.role == 'admin' %}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Добавить сотрудника</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="/add_employee">
+                <div class="row">
+                    <div class="col-md-5">
+                        <input type="text" class="form-control" name="fullname" 
+                               placeholder="ФИО сотрудника" required>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" name="department" 
+                               placeholder="Отдел (например: Цех №1)">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-circle"></i> Добавить
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ФИО</th>
+                            <th>Отдел</th>
+                            <th>Статус</th>
+                            {% if session.role == 'admin' %}
+                            <th>Действия</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in employees %}
+                        <tr>
+                            <td>{{ emp.fullname }}</td>
+                            <td>{{ emp.department }}</td>
+                            <td>
+                                {% if emp.is_active %}
+                                <span class="badge bg-success">Активен</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Неактивен</span>
+                                {% endif %}
+                            </td>
+                            {% if session.role == 'admin' %}
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" 
+                                        onclick="editEmployee({{ emp.id }}, '{{ emp.fullname }}', '{{ emp.department }}', {{ emp.is_active }})">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <a href="/delete_employee/{{ emp.id }}" 
+                                   class="btn btn-sm btn-outline-danger"
+                                   onclick="return confirm('Удалить сотрудника {{ emp.fullname }}?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if session.role == 'admin' %}
+<!-- Модальное окно редактирования -->
+<div class="modal fade" id="editEmployeeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="editEmployeeForm" action="/edit_employee/0">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Редактировать сотрудника</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">ФИО</label>
+                        <input type="text" class="form-control" name="fullname" id="editFullname" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Отдел</label>
+                        <input type="text" class="form-control" name="department" id="editDepartment">
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" name="is_active" id="editIsActive">
+                        <label class="form-check-label" for="editIsActive">Активен</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function editEmployee(id, fullname, department, isActive) {
+    var form = document.getElementById('editEmployeeForm');
+    form.action = '/edit_employee/' + id;
+    document.getElementById('editFullname').value = fullname;
+    document.getElementById('editDepartment').value = department;
+    document.getElementById('editIsActive').checked = isActive;
+    var modal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
+    modal.show();
+}
+</script>
+{% endif %}
+{% endblock %}
