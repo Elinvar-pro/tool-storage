@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Возврат инструмента{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4"><i class="bi bi-box-arrow-in-left"></i> Возврат инструмента</h2>
+
+    {% if active %}
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Инструменты на руках (просрочка: более {{ deadline_days }} дней)</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Инструмент</th>
+                            <th>Инв. номер</th>
+                            <th>Сотрудник</th>
+                            <th>Выдан</th>
+                            <th>Дней на руках</th>
+                            <th>Выдал</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in active %}
+                        <tr class="{% if item.is_overdue %}table-danger{% endif %}">
+                            <td>{{ item.tool_name }}</td>
+                            <td>{{ item.inventory_number }}</td>
+                            <td>{{ item.employee_name }}</td>
+                            <td>{{ item.issue_date }}</td>
+                            <td>
+                                <span class="{% if item.is_overdue %}text-danger fw-bold{% endif %}">
+                                    {{ item.days_issued }}
+                                    {% if item.is_overdue %}⚠️ ПРОСРОЧЕНО{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ item.issued_by_name }}</td>
+                            <td>
+                                <button class="btn btn-success btn-sm"
+                                        onclick="returnTool({{ item.id }}, '{{ item.tool_name }}', '{{ item.employee_name }}')">
+                                    <i class="bi bi-check-circle"></i> Вернуть
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center text-muted">
+            <h4><i class="bi bi-check-circle"></i> Все инструменты на складе</h4>
+            <p>Нет выданных инструментов, ожидающих возврата</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Модальное окно -->
+<div class="modal fade" id="returnModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="returnForm">
+                <input type="hidden" name="transaction_id" id="transaction_id">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Подтверждение возврата</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Вы подтверждаете возврат инструмента:</p>
+                    <p><strong id="toolInfo"></strong></p>
+                    <div class="mb-3">
+                        <label for="return_date" class="form-label">Дата возврата</label>
+                        <input type="date" class="form-control" id="return_date"
+                               name="return_date" value="{{ today }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Подтвердить возврат
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function returnTool(id, toolName, employeeName) {
+    document.getElementById('transaction_id').value = id;
+    document.getElementById('toolInfo').textContent = toolName + ' → ' + employeeName;
+    var modal = new bootstrap.Modal(document.getElementById('returnModal'));
+    modal.show();
+}
+</script>
+{% endblock %}
