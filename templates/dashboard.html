@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Панель управления{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4"><i class="bi bi-speedometer2"></i> Панель управления</h2>
+
+    <!-- Карточки статистики -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-tools"></i> Всего единиц</h5>
+                    <h2>{{ total_tools }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-check-circle"></i> На складе</h5>
+                    <h2>{{ available_tools }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-box-arrow-right"></i> Выдано</h5>
+                    <h2>{{ issued_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-exclamation-triangle"></i> Просрочено</h5>
+                    <h2>{{ overdue }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Блок предупреждений о просрочке -->
+    {% if overdue_details %}
+    <div class="card border-danger mb-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill"></i> Внимание! Просроченные инструменты (более {{ deadline_days }} дней)</h5>
+        </div>
+        <div class="card-body">
+            {% for item in overdue_details %}
+            <div class="alert alert-danger mb-2">
+                <strong>{{ item.tool_name }}</strong> ({{ item.inventory_number }}) у 
+                <strong>{{ item.employee_name }}</strong> — 
+                <strong>{{ item.days_overdue }} дней</strong> (выдано: {{ item.issue_date }})
+                <a href="/return_tool" class="btn btn-sm btn-outline-danger float-end">
+                    <i class="bi bi-box-arrow-in-left"></i> Оформить возврат
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Последние выдачи -->
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="bi bi-clock-history"></i> Инструменты на руках</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Инв. номер</th>
+                            <th>Инструмент</th>
+                            <th>Сотрудник</th>
+                            <th>Дата выдачи</th>
+                            <th>Дней на руках</th>
+                            <th>Выдал</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in recent %}
+                        <tr class="{% if item.days_issued > deadline_days %}table-danger{% endif %}">
+                            <td><strong>{{ item.inventory_number }}</strong></td>
+                            <td>{{ item.tool_name }}</td>
+                            <td>{{ item.employee_name }}</td>
+                            <td>{{ item.issue_date }}</td>
+                            <td>
+                                <span class="{% if item.days_issued > deadline_days %}text-danger fw-bold{% endif %}">
+                                    {{ item.days_issued }}
+                                    {% if item.days_issued > deadline_days %}⚠️{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ item.issued_by_name }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-muted">Нет выданных инструментов</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Инструменты в ремонте -->
+    {% if repairs %}
+    <div class="card mt-4">
+        <div class="card-header bg-warning">
+            <h5><i class="bi bi-wrench"></i> Инструменты в ремонте</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Инв. номер</th>
+                            <th>Инструмент</th>
+                            <th>Дата отправки</th>
+                            <th>Неисправность</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for repair in repairs %}
+                        <tr>
+                            <td><strong>{{ repair.inventory_number }}</strong></td>
+                            <td>{{ repair.tool_name }}</td>
+                            <td>{{ repair.sent_date }}</td>
+                            <td>{{ repair.issue_description }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
