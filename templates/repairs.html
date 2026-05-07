@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Ремонт инструментов{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4"><i class="bi bi-wrench"></i> Ремонт инструментов</h2>
+
+    <!-- Форма отправки в ремонт -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0">Отправить инструмент в ремонт</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="/send_to_repair">
+                <div class="row">
+                    <div class="col-md-4">
+                        <select class="form-select" name="tool_id" required>
+                            <option value="">-- Выберите инструмент --</option>
+                            {% for tool in tools %}
+                            <option value="{{ tool.id }}">
+                                {{ tool.name }} ({{ tool.inventory_number }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" class="form-control" name="sent_date" value="{{ today }}">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" name="issue_description" 
+                               placeholder="Описание неисправности" required>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="bi bi-tools"></i> В ремонт
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Активные ремонты -->
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">Инструменты в ремонте</h5>
+        </div>
+        <div class="card-body">
+            {% if active_repairs %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Инструмент</th>
+                            <th>Инв. номер</th>
+                            <th>Дата отправки</th>
+                            <th>Неисправность</th>
+                            <th>Дней в ремонте</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for repair in active_repairs %}
+                        <tr>
+                            <td>{{ repair.tool_name }}</td>
+                            <td>{{ repair.inventory_number }}</td>
+                            <td>{{ repair.sent_date }}</td>
+                            <td>{{ repair.issue_description }}</td>
+                            <td>
+                                {% set days = (today | string)[:10] %}
+                                <span class="badge bg-warning text-dark">В ремонте</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-success btn-sm" 
+                                        onclick="returnRepair({{ repair.id }}, '{{ repair.tool_name }}')">
+                                    <i class="bi bi-check-circle"></i> Вернуть из ремонта
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center">Нет инструментов в ремонте</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- История ремонтов -->
+    {% if completed_repairs %}
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Завершённые ремонты</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Инструмент</th>
+                            <th>Инв. номер</th>
+                            <th>Отправлен</th>
+                            <th>Возвращён</th>
+                            <th>Неисправность</th>
+                            <th>Стоимость</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for repair in completed_repairs %}
+                        <tr>
+                            <td>{{ repair.tool_name }}</td>
+                            <td>{{ repair.inventory_number }}</td>
+                            <td>{{ repair.sent_date }}</td>
+                            <td>{{ repair.return_date }}</td>
+                            <td>{{ repair.issue_description }}</td>
+                            <td>{{ repair.repair_cost }} ₽</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Модальное окно возврата из ремонта -->
+<div class="modal fade" id="returnRepairModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="returnRepairForm" action="/return_from_repair/0">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Возврат из ремонта</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Подтвердите возврат из ремонта:</p>
+                    <p><strong id="repairToolInfo"></strong></p>
+                    <div class="mb-3">
+                        <label for="return_date_repair" class="form-label">Дата возврата</label>
+                        <input type="date" class="form-control" name="return_date" 
+                               id="return_date_repair" value="{{ today }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="repair_cost" class="form-label">Стоимость ремонта (₽)</label>
+                        <input type="number" class="form-control" name="repair_cost" 
+                               id="repair_cost" value="0" step="0.01">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Вернуть на склад
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function returnRepair(id, toolName) {
+    var form = document.getElementById('returnRepairForm');
+    form.action = '/return_from_repair/' + id;
+    document.getElementById('repairToolInfo').textContent = toolName;
+    var modal = new bootstrap.Modal(document.getElementById('returnRepairModal'));
+    modal.show();
+}
+</script>
+{% endblock %}
