@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Настройки системы{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4"><i class="bi bi-sliders"></i> Настройки системы</h2>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Параметры просрочки</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="deadline_days" class="form-label">
+                                Срок возврата инструмента (дней)
+                            </label>
+                            <input type="number" class="form-control" id="deadline_days"
+                                   name="deadline_days" value="{{ deadline_days }}"
+                                   min="1" max="365" required>
+                            <div class="form-text">
+                                Если инструмент не возвращён за это количество дней — 
+                                он считается просроченным и подсвечивается красным.
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Сохранить
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5><i class="bi bi-info-circle"></i> Как это работает</h5>
+                    <ul>
+                        <li>На <strong>панели управления</strong> появятся красные предупреждения</li>
+                        <li>В <strong>журнале</strong> просроченные инструменты подсвечиваются красным</li>
+                        <li>При <strong>возврате</strong> сразу видно, какие инструменты просрочены</li>
+                        <li>Рекомендуемое значение: <strong>14 дней</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
