@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Справочник инструментов{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4"><i class="bi bi-tools"></i> Справочник инструментов</h2>
+
+    {% if session.role == 'admin' %}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Добавить инструмент</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="/add_tool">
+                <div class="row">
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" name="name" placeholder="Название" required>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="text" class="form-control" name="inventory_number" placeholder="Инв. номер" required>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" name="description" placeholder="Описание">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-circle"></i> Добавить
+                        </button>
+                    </div>
+                </div>
+                <div class="form-text mt-2">
+                    <i class="bi bi-info-circle"></i> 
+                    Каждый инструмент — это одна единица с уникальным инвентарным номером. 
+                    Если у вас 5 одинаковых дрелей, добавьте 5 записей с разными номерами (например: INV-001-1, INV-001-2, ...).
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Инв. номер</th>
+                            <th>Название</th>
+                            <th>Описание</th>
+                            <th>Статус</th>
+                            <th>У кого</th>
+                            {% if session.role == 'admin' %}
+                            <th>Действия</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tool in tools %}
+                        <tr>
+                            <td><strong>{{ tool.inventory_number }}</strong></td>
+                            <td>{{ tool.name }}</td>
+                            <td>{{ tool.description }}</td>
+                            <td>
+                                {% if tool.status == 'ok' %}
+                                <span class="badge bg-success">На складе</span>
+                                {% elif tool.status == 'issued' %}
+                                <span class="badge bg-primary">Выдано</span>
+                                {% elif tool.status == 'repair' %}
+                                <span class="badge bg-warning text-dark">В ремонте</span>
+                                {% else %}
+                                <span class="badge bg-danger">Списан</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if tool.status == 'issued' and tool.issued_to %}
+                                {{ tool.issued_to }}
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+                            {% if session.role == 'admin' %}
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" 
+                                        onclick="editTool({{ tool.id }}, '{{ tool.name }}', '{{ tool.description }}', '{{ tool.status }}')">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <a href="/delete_tool/{{ tool.id }}" 
+                                   class="btn btn-sm btn-outline-danger"
+                                   onclick="return confirm('Удалить инструмент {{ tool.inventory_number }} — {{ tool.name }}?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if session.role == 'admin' %}
+<!-- Модальное окно редактирования -->
+<div class="modal fade" id="editToolModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="editToolForm" action="/edit_tool/0">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Редактировать инструмент</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Название</label>
+                        <input type="text" class="form-control" name="name" id="editName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Описание</label>
+                        <input type="text" class="form-control" name="description" id="editDescription">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Статус</label>
+                        <select class="form-select" name="status" id="editStatus">
+                            <option value="ok">На складе</option>
+                            <option value="repair">В ремонте</option>
+                            <option value="decommissioned">Списан</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function editTool(id, name, description, status) {
+    var form = document.getElementById('editToolForm');
+    form.action = '/edit_tool/' + id;
+    document.getElementById('editName').value = name;
+    document.getElementById('editDescription').value = description;
+    document.getElementById('editStatus').value = status;
+    var modal = new bootstrap.Modal(document.getElementById('editToolModal'));
+    modal.show();
+}
+</script>
+{% endif %}
+{% endblock %}
